@@ -1,5 +1,6 @@
 import Order from "../models/order.js";
 import Product from "../models/product.js";
+import { isAdmin } from "./userController.js";
 
 export async function createOrder(req, res) {
   if (req.user == null) {
@@ -15,18 +16,28 @@ export async function createOrder(req, res) {
     orderInfo.name = req.user.firstName + " " + req.user.lastName;
   }
 
-  let orderId = "CBC00001";
+  // Use orderId from frontend if provided, otherwise generate one
+  let orderId = orderInfo.orderId;
 
-  const lastOrder = await Order.find().sort({ date: -1 }).limit(1);
+  if (!orderId) {
+    // Generate timestamp-based order ID to match frontend format
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
+    orderId = `ORD${year}${month}${day}${hours}${minutes}${seconds}`;
+  }
 
-  if (lastOrder.length > 0) {
-    const lastOrderId = lastOrder[0].orderId;
-
-    const lastOrderNumberString = lastOrderId.replace("CBC", "");
-    const lastOrderNumber = parseInt(lastOrderNumberString);
-    const newOrderNumber = lastOrderNumber + 1;
-    const newOrderNumberString = String(newOrderNumber).padStart(5, "0");
-    orderId = "CBC" + newOrderNumberString;
+  // Check if orderId already exists
+  const existingOrder = await Order.findOne({ orderId: orderId });
+  if (existingOrder) {
+    res.status(400).json({
+      message: "Order ID already exists. Please try again.",
+    });
+    return;
   }
   try {
     let total = 0;
@@ -94,5 +105,60 @@ export async function createOrder(req, res) {
       message: "Failed to create order",
       error: err,
     });
+  }
+}
+
+export async function getOrders(req, res) {
+  if (req.user == null) {
+    res.status(403).json({
+      message: "Please login and try again",
+    });
+    return;
+  }
+  try {
+    if (req.user.role == "admin") {
+      const orders = await Order.find();
+      res.json(orders);
+    } else {
+      const orders = await Order.find({ email: req.user.email });
+      res.json(orders);
+    }
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to fetch orders",
+      error: err,
+    });
+  }
+}
+
+export async function updateOrderStatus(req, res) {
+  if (!isAdmin(req)) {
+    res.status(403).json({
+      message: "You are not authorized to update order status",
+    });
+    return;
+  }
+  try {
+    const orderId = req.params.orderId;
+    const status = req.params.status;
+
+    await Order.updateOne(
+      {
+        orderId: orderId,
+      },
+      {
+        status: status,
+      }
+    );
+
+    res.json({
+      message: "Order status updated successfully",
+    });
+  } catch (e) {
+    res.status(500).json({
+      message: "Failed to update order status",
+      error: e,
+    });
+    return;
   }
 }
