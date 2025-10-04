@@ -157,7 +157,7 @@ const transport = nodemailer.createTransport({
   port: 587,
   secure: false,
   auth: {
-    user: "malithdilshan27@gmail.com",
+    user: "smperera574@gmail.com",
     pass: "javyzfzydwsdrmbg",
   },
 });
@@ -186,9 +186,9 @@ export async function sendOTP(req, res) {
   });
 
   const message = {
-    from: "malithdilshan27@gmail.com",
+    from: "smperera574@gmail.com",
     to: email,
-    subject: "Resetting password for crystal beauty clear.",
+    subject: "Resetting passwords.",
     text: "This your password reset OTP : " + randomOTP,
   };
 
