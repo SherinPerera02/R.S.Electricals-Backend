@@ -2,6 +2,7 @@ import express from "express";
 import {
   createUser,
   getUser,
+  getAllUsers,
   loginUser,
   loginWithGoogle,
   resetPassword,
@@ -16,5 +17,6 @@ userRouter.post("/login/google", loginWithGoogle);
 userRouter.post("/send-otp", sendOTP);
 userRouter.post("/reset-password", resetPassword);
 userRouter.get("/", getUser);
+userRouter.get("/", getAllUsers);
 
 export default userRouter;

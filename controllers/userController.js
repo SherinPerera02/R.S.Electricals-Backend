@@ -158,7 +158,7 @@ const transport = nodemailer.createTransport({
   secure: false,
   auth: {
     user: "smperera574@gmail.com",
-    pass: "javyzfzydwsdrmbg",
+    pass: "zuxv rfbr xavc atmf",
   },
 });
 export async function sendOTP(req, res) {
@@ -260,6 +260,18 @@ export function getUser(req, res) {
     res.json({
       ...req.user,
     });
+  }
+}
+
+export async function getAllUsers(req, res) {
+  if (!isAdmin(req)) {
+    res.status(403).json({
+      message: "You are not authorized to view all users",
+    });
+    return;
+  } else {
+    const users = await User.find({ role: "user" });
+    res.json(users);
   }
 }
 
